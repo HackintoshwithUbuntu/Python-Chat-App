@@ -28,7 +28,7 @@ host = "Your host ip" # NOTE: If you are hosting the server yourself change the 
 
 ## Notes
 - If the login and profile picture files are not present when the code is run, they will be created. This means that you can reset logins by deleting those files
-- Key exhchange is not sequre, everything after that is
+- Key exchange is not secure, everything after is
 - Each client has a unique key
 - See requirements.txt for dependencies
 
