@@ -1,7 +1,9 @@
 # Python Chat App
 A GUI python chat app with encryption, notifications and profile pictures
 
-put images here
+![image](https://user-images.githubusercontent.com/64008512/131279632-527f0a17-02e2-4857-96f2-a7485bf4c92d.png)
+![image](https://user-images.githubusercontent.com/64008512/131279597-0b894364-6011-4d79-91b2-738e3dbc43e2.png)
+![image](https://user-images.githubusercontent.com/64008512/131279489-8631b732-489f-4e0d-bf08-33c5fdd7da15.png)
 
 ## Features
 - Encryption (with tag verification and nonce)
