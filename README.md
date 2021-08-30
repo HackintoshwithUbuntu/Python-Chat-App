@@ -43,3 +43,5 @@ Login page (most design):
 Copyright (c) 2021 by Mehdi Aroui (https://codepen.io/mehdiaroui/pen/jJgPvj)  
 Chat windows (only some GUI features):  
 Copyright (c) 2021 by Fabio Ottaviani (https://codepen.io/supah/pen/jqOBqp)  
+  
+If this repository has helped you, consider starring
