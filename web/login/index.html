@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <!-- Metadata -->
+  <meta charset="UTF-8">
+  <title>Secret-chat app</title>
+  <link rel="icon" href="favicon.ico">
+  <script type="text/javascript" src="/eel.js"></script>
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css'><link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- Title -->
+<h2>Secret-chat app login page</h2>
+<div class="container" id="container">
+	<!-- Sign up side -->
+	<div class="form-container sign-up-container">
+		<form action="#">
+			<h1>Create Account</h1>
+			<!-- NOTE: these are not shown -->
+			<div class="social-container">
+				<a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+				<a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+			</div>
+			<!-- This text appears on a successful sign up -->
+			<h4 id='signuptxt'>Your account has been created please sign in (spaces may have been removed)</h4>
+			<span>Use your email for registration</span>
+			<input type="text" placeholder="Username (no spaces)" id="usersignup" required pattern="[a-zA-Z0-9]+">
+			<input type="email" placeholder="Email (optional)" />
+			<input type="password" placeholder="Password (no spaces)" id="passsignup" required pattern="[a-zA-Z0-9]+"/>
+			<button type='button' id='sendsignupbut'>Sign Up</button>
+			<!-- Error Message -->
+			<span id="upfail" style="display: none; color: red; margin-top: 10px;">Signup failed, try again</span>
+		</form>
+	</div>
+	<div class="form-container sign-in-container">
+		<!-- Log in side -->
+		<form action="#">
+			<h1>Sign in</h1>
+			<div class="social-container">
+				<a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+				<a href="#" class="social"><i class="fab fa-google-plus-g"></i></a>
+				<a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+			</div>
+			<span>If you have an account:</span>
+			<input type="text" placeholder="Username" id='userlogin'/>
+			<input type="password" placeholder="Password" id='passlogin'/>
+			<a href="#">Forgot your password?</a>
+			<button type='button' id='signinbut'>Sign In</button>
+			<!-- Error Message -->
+			<span id="infail" style="display: none; color: red; margin-top: 10px;">Login failed, try again</span>
+		</form>
+	</div>
+	<div class="overlay-container">
+		<!-- Instructions for both sides  -->
+		<div class="overlay">
+			<!-- Sign up side -->
+			<div class="overlay-panel overlay-left">
+				<h1>Welcome Back!</h1>
+				<p>To keep connected with us please login with your personal info</p>
+				<button class="ghost" id="signIn">Sign In</button>
+			</div>
+			<!-- Sign in side  -->
+			<div class="overlay-panel overlay-right">
+				<h1>New Users!</h1>
+				<p>Enter your personal details and start your journey with us</p>
+				<button class="ghost" id="signUp">Sign Up</button>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- Link to script -->
+  <script  src="./script.js"></script>
+</body>
+</html>

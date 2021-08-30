@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <!-- Metadata -->
+  <meta charset="UTF-8">
+  <title>Chat Window</title>
+  <link rel="icon" href="favicon.ico">
+  <script type="text/javascript" src="/eel.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Open+Sans'>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.min.css'>
+<link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- Main content -->
+<!-- Holder keeps both people list and messages in a flex box-->
+<div id='holder'>
+  <!-- The user message and send display area-->
+  <div class="chat">
+    <!-- The top dynamically updating windows-->
+    <div class="chat-title">
+      <div>
+      <h1 id="chatheader">All Users</h1>
+        <figure class="avatar">
+          <img id="headerimg" src="./6.png" /></figure>
+      </div>
+      <!-- The change avatar button -->
+      <div class="change-image" style="margin-right: 10px; padding-right: 10px; padding-left: 9px; padding-top:5px; border-radius: 5px;">
+        <h1>Change avatar</h1>
+      </div>
+    </div>
+    <!-- Actual message display area -->
+    <div class="messages">
+    </div>
+    <!-- Send area -->
+    <div class="message-box">
+      <textarea type="text" class="message-input" placeholder="Type message..."></textarea>
+      <button type="submit" class="message-submit">Send</button>
+    </div>
+
+  </div>
+
+  <!-- The people column on left, uses flex for positioning and block internally-->
+  <div class='people'>
+    <!-- NOTE: This is appended to by the script-->
+    <ul class='ppllist' id='ppllistid'> 
+    </ul>
+  </div>
+</div>
+<!-- The is the profile picture selector menu-->
+<div id='img-holder'>
+  <h1 style="text-align: center;">Choose a profile picture:</h1>
+  <!-- Close button -->
+  <div id="change-image-inside" class="change-image">&#10006;</div>
+  <!-- Table contains images, filled using javascipt -->
+  <table style="width: 100%; height: 50px;">
+    <tr id='img-row' style="width:100%">
+    </tr>
+  </table>
+</div>
+<div class="bg"></div>
+<!-- Imported utilites like jquery and custom scrollbars -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.3/jquery.mCustomScrollbar.concat.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.min.js'></script>
+<script>
+  // Setting global variables
+  var curindex = 0;
+  var messagearr = [];
+  var maxindex = 0;
+  const chatheader = document.getElementById("chatheader");
+
+  // Filling out the pictures table
+  for(let i = 0; i < 7; i++){
+    img = i+".png";
+    // Setting the HTML
+    $('#img-row').append('<td id="p'+i+'" style="border-radius: 20px;"><figure class="avatar" style="transform: translate(200%,0);""><img src="'+img+'" style="width: 100%; height: auto;"></figure></td>');
+  }
+
+  // On image click
+  $("td").click(function(){
+    // Find id and send it to the python code for processing
+    let id = $(this).attr('id');
+    console.log("Changed profile picture to: " + id); // Logging
+    pfpclicksound.play(); // Sound
+    eel.new_pfp(id); // Python code
+  })
+
+  // Tracker to see if image state is open or closed for animations
+  var imgstate = false;
+  // Function for change avatar click
+  $(".change-image").click(function(){
+    chimagesound.play();
+    // Smooth animation hiding image picker
+    if(imgstate){
+      $("#img-holder").hide();
+      $("#holder").slideDown(600);
+      imgstate = false;
+    }
+    else{
+      // Smooth animation hiding message area
+      $("#holder").slideUp(600);
+      $("#img-holder").show();
+      imgstate = true;
+    }
+  }
+  )
+
+  // Function for python code to change the profile picture of a person
+  // NOTE: this also affects sent messages
+  eel.expose(change_pfp);
+  function change_pfp(index, newpid){
+    // Select all required then change their attribute as needed
+    $(".a"+index).attr("src",newpid+".png");
+    return true;
+  }
+
+  // Call this function when starting the window to tell
+  // the python code to fetch values, store them in RAM
+  // and send the required ones over. Note that we also
+  // start a new python thread here so that the front end 
+  // code can keep communicating with the backend
+  async function getlist(){
+    // Call the python code and accept return value
+    var list = await eel.request_list()();
+
+    // Populate the people column using values and passing them into the function
+    for (let i = 0; i < list.length; i++) {
+      const element = list[i];
+      addlist(element, i);
+    }
+    // Set the maxindex so we can asign indicies to people who join later on
+    maxindex = list.length - 1;
+
+    // Here we are pushing a seperate message window for each person
+    // so that their messges can be stored and accessed individually
+    for(let i = 0; i < list.length; i++){
+      // Setting HTML
+      $('<div height=101% class="messages-content messages-content'+i+'" style="display: none;">'+'</div>').appendTo($('.messages'));
+      // Adding to array for later use
+      $allmessages.push($('.messages-content'+i));
+      // Telling scroll bar plugin to attatch and attach
+      $allmessages[i].mCustomScrollbar();
+    }
+
+    // Log the array
+    console.log($allmessages);
+    // Set the all users message window to visible
+    $messages = $allmessages[0];
+    $messages.css("display", "block");
+    // Set the header image accordingly
+    $("#headerimg").addClass("a"+curindex);
+  }
+
+  // Function for when any of the people list items on the left are clicked
+  // We know which one was clicked using the value passthough that was set above
+  // in the for loop creating the list
+  async function listclick(index){
+    // If we are already on the right index do nothing
+    if(index == curindex){
+      return true;
+    }
+    // Play a sound to acknowledge
+    side.play();
+    // Hide the current message window
+    $messages.css("display", "none");
+    // Clear the written input
+    $('.message-input').val(null);
+    // Tell the header image that we are moving users by changing its class
+    $("#headerimg").removeClass("a"+curindex);
+    // Update the global index variable
+    curindex = index;
+    // Get name of new user message windows
+    let newchatusername = document.getElementById("username"+index).innerHTML;
+    // Set variable
+    $messages = $allmessages[index];
+    // Make windows visible
+    $messages.css("display", "block");
+    // Remove notification, if required
+    $("#notif"+index).css("display", "none");
+    // Update the top dynamic bar with name
+    chatheader.innerHTML = newchatusername;
+    // Use python code to fetch the image required
+    let pfpnum = await eel.query_pfp(index)();
+    // Update the header image and class
+    $("#headerimg").attr("src", pfpnum+".png");
+    $("#headerimg").addClass("a"+curindex);
+    // Log our hard efforts
+    console.log("User moved to: " + curindex + " or " + newchatusername);
+  }
+
+  // Storing the people column within a variable
+  var listobj = document.getElementById("ppllistid")
+
+  // A function made to push a user onto the side list with all their attributes and click events
+  async function addlist(name, index){
+    // Add a list object
+    let newli = document.createElement("li");
+    newli.className = "listmembers";
+    // Add a paragraph and set id as required
+    let namep = document.createElement("p");
+    namep.innerHTML = name;
+    namep.id = "username"+index;
+    // Make notification icon (hidden by default)
+    let notif = document.createElement("div");
+    notif.id = "notif"+index;
+    notif.style.display = "none";
+    notif.className = "notifclass";
+    // Make the click event and set id and classname
+    let executor = document.createElement("a");
+    executor.href = "javascript:listclick("+ index + ")";
+    executor.id = index;
+    executor.className = "clickers";
+    // Setting the outer boarder for the profile picture and positioning it
+    let fig = document.createElement("figure");
+    fig.className = "avatar";
+    fig.style.position = "relative"
+    fig.style.top = "-33px";
+    fig.style.left = "-35px";
+    // Setting the image inside the figure
+    let imgpfp = document.createElement("img");
+    // Query python code for the correct file and then set it with classname so we can reference it later using Jquery
+    let pfpnum = await eel.query_pfp(index)();
+    imgpfp.src = pfpnum+".png"
+    imgpfp.style.width = "100%"
+    imgpfp.style.height = "auto";
+    imgpfp.className = "a"+index;
+
+    // Append all the elements to each other so they can actually appear on the main screen rather than being protoypes
+    fig.appendChild(imgpfp);
+    newli.appendChild(namep);
+    newli.appendChild(notif);
+    executor.appendChild(newli);
+    executor.appendChild(fig);
+    listobj.appendChild(executor);
+  }
+
+  // Call the function
+  getlist();
+
+  // Set all the sound variables so it is easy to play sound when required
+  var onindex = new Audio("receive1.mp3");
+  var notindex = new Audio("receive2.mp3");
+  var sent = new Audio("sent.mp3");
+  var side = new Audio("side.wav");
+  var pfpclicksound = new Audio("pfpclick.wav")
+  var chimagesound = new Audio("chimageclick.wav")
+
+  // A function to add new direct messages
+  // Called by python when a new message is received
+  eel.expose(pushmsg);
+  function pushmsg(index, msg, pfpnum){
+    // Add main html
+    $('<div class="message new"><figure class="avatar"><img class="a'+index+'" src="./'+pfpnum+'.png" /></figure>' + msg + '</div>').appendTo($('#mCSB_'+(index+1)+'_container')).addClass('new');
+    // Set the time sent
+    setDate(index);
+    // If we need to show on screen notification do so
+    // Try and show the windows notification if the operating system allows us to
+    if(curindex != index){
+      $("#notif"+index).css("display", "inline-block");
+      notindex.play();
+      let newchatusername = document.getElementById("username"+index).innerHTML;
+      eel.win10notif(newchatusername, msg, 1)
+      console.log("notification on "+index);
+    }
+    // Or just play the receive on current windows sound and scroll to bottom
+    else{
+      onindex.play()
+      updateScrollbar(index);
+    }
+    // Log our new international arrival
+    console.log(index);
+    console.log(msg);
+    return true;
+  }
+
+  // A function to add new direct messages
+  // Called by python when a new message is received
+  eel.expose(allmsg);
+  function allmsg(index, msg, sender, pfpnum){
+    // Add main html
+    $('<div class="message new"><figure class="avatar"><img class="a'+index+'" src="./'+pfpnum+'.png" /></figure>' + msg + '</div>').appendTo($('#mCSB_'+(1)+'_container')).addClass('new');
+    // Set the time sent and also append the sender name so the user knows who sent the message
+    // NOTE: this is a different function to the setdate used above
+    setDateAll(sender);
+    // If we need to show on screen notification do so
+    // Try and show the windows notification if the operating system allows us to
+    if(curindex != 0){
+      $("#notif"+0).css("display", "inline-block");
+      notindex.play();
+      eel.win10notif(sender, msg, 0)
+      console.log("notification on"+0);
+    }
+    // Or just play the receive on current windows sound and scroll to bottom
+    else{
+      onindex.play()
+      updateScrollbar(0);
+    }
+    // Log our new international arrival
+    console.log(0);
+    console.log(msg);
+    return true;
+  }
+
+
+  // A fucntion to add in users after our current client has joined
+  // (ie. we log in first, then they log in at a later time and the ui needs to be updated to reflect that and allow messaging to this new user)
+  // Python will call this function on a new user join
+  eel.expose(pushuser);
+  function pushuser(username){
+    let i = maxindex + 1;
+    addlist(username, i);
+    $('<div height=100% class="messages-content messages-content'+i+'" style="display: none;">'+'</div>').appendTo($('.messages'));
+    $allmessages.push($('.messages-content'+i));
+    $allmessages[i].mCustomScrollbar();
+    maxindex++;
+    console.log("Pushed User: " + username + " at index: "+ i);
+    return true;
+  }
+
+  // Function to call when a user logs off
+  // Python will call this function once it receives the required command
+  eel.expose(removeuser);
+  function removeuser(index){
+    // Set the message box to remove
+    let toremove = $allmessages[index];
+    // Remove it
+    toremove.remove();
+    // Also remove the name on the side
+    $("#" + index).remove();
+    // Tell python that the eel was successful
+    return true;
+  }
+
+
+  /*////////////////////////
+  THE SECOND PART
+  ////////////////////////*/
+
+  // We can assume the UI has loaded now
+  // yay
+
+  // Setting our variables (some of these are used in the first section)
+  var $messages,
+      $allmessages = [],
+      d, h, m
+
+  // A function to take the scrollbar down to the bottom on a certain message box
+  function updateScrollbar(index) {
+    $allmessages[index].mCustomScrollbar("update").mCustomScrollbar('scrollTo', 'bottom', {
+      scrollInertia: 10,
+      timeout: 0
+    });
+  }
+
+  // A function to get the current time and append it to the last
+  // message on a certain message box
+  // Note the automated correction for minutes < 10
+  function setDate(index){
+    // Create a date object
+    d = new Date()
+      // Get minutes
+      m = d.getMinutes();
+      // Fix minutes if required
+      if(m < 10){
+        m = "0" + m.toString();
+      }
+      // Append to HTML message box
+      $('<div class="timestamp">' + d.getHours() + ':' + m + '</div>').appendTo($('#mCSB_'+(index+1)+'_container').children().last());
+  }
+
+  // A function to get the current time and append it to the last
+  // but also appends sendername as this is for the all users box
+  // We can assume the index is 0
+  // message on a certain message box
+  // Note the automated correction for minutes < 10
+  function setDateAll(sender){
+    // Create a date object
+    d = new Date()
+      // Get minutes
+      m = d.getMinutes();
+      // Fix minutes if required
+      if(m < 10){
+        m = "0" + m.toString();
+      }
+      // Log becuase we can
+      console.log(d.getHours() + ':' + m + ' - '+ sender)
+      // Append to HTML message box with the sender name
+      $('<div class="timestamp">' + d.getHours() + ':' + m + ' - '+ sender + '</div>').appendTo($('#mCSB_'+(1)+'_container').children().last());
+  }
+
+  // Function to tell python to send message and update necessary
+  // elements on the ui.  Python cannot call the function
+  function sendmsg(msg){
+    // Clear the input box
+    $('.message-input').val(null);
+    // Move scrollbar to bottom
+    updateScrollbar(curindex);
+    // Play sent sound
+    sent.play();
+    // Tell python to send a message and use the index to determine the recipiant
+    eel.send_msg(msg, curindex);
+  }
+
+  // When a user clicks on send, call send function
+  $('.message-submit').click(function() {
+    // Call insert message function
+    insertMessage();
+  });
+
+  // If a user hits enter also call the send function
+  $(window).on('keydown', function(e) {
+    if (e.which == 13) {
+      // Call insert message function
+      insertMessage();
+      return false;
+    }
+  })
+
+  // A function to make a sent message appear on screen
+  function insertMessage() {
+    // Get the value to typed message
+    msg = $('.message-input').val();
+    // If nothing do nothing
+    if ($.trim(msg) == '') {
+      return false;
+    }
+    // Append HTML message
+    $('<div class="message message-personal">' + msg + '</div>').appendTo($('#mCSB_'+(curindex+1)+'_container')).addClass('new');
+    // Add the time underneath
+    setDate(curindex);
+    // Scroll to bottom
+    updateScrollbar(curindex);
+    // Send message to whoever it needs to go to thorugh another function which calls python
+    sendmsg(msg);
+    // Clear the input
+    $('.message-input').val(null);
+  }
+  
+</script>
+
+</body>
+</html>

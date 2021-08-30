@@ -1,0 +1,4 @@
+# Requirements
+eel
+PyCryptoDome
+win10toast # not essential
