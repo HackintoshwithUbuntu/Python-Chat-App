@@ -10,6 +10,7 @@ A GUI python chat app with encryption, notifications and profile pictures
 - Profile Pictures
 - GUI interface
 - Logins saved between srever reboots
+- Hashed passwords
 - Profile Pictures saved between server reboots
 - Server logs
 - Native notifications on Windows
