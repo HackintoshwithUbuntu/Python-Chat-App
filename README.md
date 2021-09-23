@@ -9,7 +9,7 @@ A GUI python chat app with encryption, notifications and profile pictures
 - Encryption (with tag verification and nonce)
 - Profile Pictures
 - GUI interface
-- Logins saved between srever reboots
+- Logins saved between server reboots
 - Hashed passwords
 - Profile Pictures saved between server reboots
 - Server logs
