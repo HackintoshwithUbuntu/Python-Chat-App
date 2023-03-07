@@ -1,4 +1,3 @@
-# Requirements
-eel
-PyCryptoDome
-win10toast # not essential
+Eel==0.14.0
+pycryptodome==3.17
+win10toast==0.9
